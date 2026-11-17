@@ -3,7 +3,7 @@
 Runs [SpecAR](https://github.com/statite-ai/SpecAR) text-to-video on Krea Realtime 14B in ComfyUI. It adds one node,
 **SpecAR Generate**, and calls the installed `specar` package.
 
-Project page: [statite.ai/specar](https://statite.ai/specar) · Paper: [PDF](https://statite.ai/specar/specar.pdf) · Code: [statite-ai/SpecAR](https://github.com/statite-ai/SpecAR)
+Project page: [statite.ai/stridear](https://statite.ai/stridear/) · Paper: [PDF](https://statite.ai/specar/specar.pdf) · Code: [statite-ai/SpecAR](https://github.com/statite-ai/SpecAR)
 
 ## Install
 
@@ -75,7 +75,7 @@ the mp4 file differs from the one `specar generate` writes, and encoding adds ab
   author = {Hassan, Hudeifa},
   year   = {2026},
   note   = {Preprint},
-  url    = {https://statite.ai/specar}
+  url    = {https://statite.ai/stridear/}
 }
 ```
 
