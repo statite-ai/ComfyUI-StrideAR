@@ -1,9 +1,9 @@
 # ComfyUI-SpecAR
 
-Runs [SpecAR](https://github.com/statite-ai/SpecAR) text-to-video on Krea Realtime 14B in ComfyUI. It adds one node,
+Runs [StrideAR](https://github.com/statite-ai/SpecAR) text-to-video on Krea Realtime 14B in ComfyUI. It adds one node,
 **SpecAR Generate**, and calls the installed `specar` package.
 
-Project page: [statite.ai/stridear](https://statite.ai/stridear/) · Paper: [PDF](https://statite.ai/specar/specar.pdf) · Code: [statite-ai/SpecAR](https://github.com/statite-ai/SpecAR)
+Project page: [statite.ai/stridear](https://statite.ai/stridear/) · Earlier preprint: [PDF](https://statite.ai/specar/specar.pdf) · Code: [statite-ai/SpecAR](https://github.com/statite-ai/SpecAR)
 
 ## Install
 
@@ -24,12 +24,12 @@ python main.py
 2. Go to **Templates**, find **ComfyUI-SpecAR** and open **SpecAR**. You can also drag `example_workflows/SpecAR.json` onto the page.
 3. Type your prompt in **SpecAR Generate**.
 
-![The SpecAR workflow in ComfyUI](assets/comfyui-workflow.png)
+![The StrideAR workflow in ComfyUI](assets/comfyui-workflow.png)
 
 4. Click **Run**. The first run loads the models, which takes about 3 minutes. Later runs start right away.
 5. The video plays in **Save Video** and is saved in `output/video`.
 
-![A finished SpecAR video in ComfyUI](assets/comfyui-result.png)
+![A finished StrideAR video in ComfyUI](assets/comfyui-result.png)
 
 ### Settings
 
@@ -70,8 +70,8 @@ the mp4 file differs from the one `specar generate` writes, and encoding adds ab
 ## Citation
 
 ```bibtex
-@misc{hassan2026specar,
-  title  = {SpecAR: Distributed Target Blocks for Fast Autoregressive Video Generation},
+@misc{hassan2026stridear,
+  title  = {StrideAR: Strided Target Blocks for Fast Autoregressive Video Generation},
   author = {Hassan, Hudeifa},
   year   = {2026},
   note   = {Preprint},
@@ -81,6 +81,6 @@ the mp4 file differs from the one `specar generate` writes, and encoding adds ab
 
 ## License
 
-This node is Apache-2.0. It imports `specar` and contains none of its code. SpecAR's Krea backend is CC BY-NC-SA 4.0,
+This node is Apache-2.0. It imports `specar` and contains none of its code. StrideAR's Krea backend is CC BY-NC-SA 4.0,
 which allows non-commercial use only, and model weights carry their own licenses. See the
-[SpecAR license notes](https://github.com/statite-ai/SpecAR#license).
+[StrideAR license notes](https://github.com/statite-ai/SpecAR#license).
