@@ -34,7 +34,7 @@
  "nodes": [
   {
    "id": 1,
-   "type": "SpecARGenerate",
+   "type": "StrideARGenerate",
    "pos": [
     60,
     120

@@ -1,18 +1,18 @@
 [project]
 name = "comfyui-specar"
-version = "0.1.1"
-description = "SpecAR: Training-free 2.04x-2.81x speedup on Krea Realtime 14B + Self-Forcing 1.3B (up to 23.1 FPS real-time on B200, 2.67x on H100) with lazy target KV caching and low-VRAM offload."
+version = "0.2.0"
+description = "StrideAR: Training-free 2.04x-2.81x speedup on Krea Realtime 14B + Self-Forcing 1.3B (up to 23.1 FPS real-time on B200, 2.67x on H100) with lazy target KV caching and low-VRAM offload."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"
-# Empty on purpose: specar pins exact versions, so the README installs them with ComfyUI.
+# Empty on purpose: stridear pins exact versions, so the README installs them with ComfyUI.
 dependencies = []
 
 [project.urls]
 Homepage = "https://statite.ai/stridear/"
-Repository = "https://github.com/statite-ai/ComfyUI-SpecAR"
+Repository = "https://github.com/statite-ai/ComfyUI-StrideAR"
 
 [tool.comfy]
-DisplayName = "SpecAR"
+DisplayName = "StrideAR"
 PublisherId = "specar"
 Icon = ""

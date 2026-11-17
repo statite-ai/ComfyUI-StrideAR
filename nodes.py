@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""SpecAR text-to-video node. It calls the installed `specar` package and patches it only at runtime, in this process."""
+"""StrideAR text-to-video node. It calls the installed `stridear` package and patches it only at runtime, in this process."""
 import gc
 import importlib.util
 import logging
@@ -98,12 +98,12 @@ def _import_krea(weights):
     ComfyUI's top-level `utils` is imported first, and the Krea code asks for `utils.scheduler` and `utils.wan_wrapper`.
     Registering exactly those two names satisfies Krea and leaves ComfyUI's package and its search path untouched.
     """
-    import specar
-    vendor = os.path.join(os.path.dirname(specar.__file__), "_vendor", "krea")
+    import stridear
+    vendor = os.path.join(os.path.dirname(stridear.__file__), "_vendor", "krea")
     if vendor not in sys.path:
         sys.path.append(vendor)  # last, so these modules cannot shadow anything; model_krea skips its own insert
     os.environ["MODEL_FOLDER"] = weights
-    import specar.model_krea as krea
+    import stridear.model_krea as krea
     for name in ("scheduler", "wan_wrapper"):
         full = f"utils.{name}"
         if full not in sys.modules:
@@ -160,49 +160,53 @@ def _model(weights, low_vram):
         return _loaded[2]
     _free()
     _load_count += 1
-    logging.info(f"SpecAR load #{_load_count}: {weights}, low_vram_offload={low_vram}")
+    logging.info(f"StrideAR load #{_load_count}: {weights}, low_vram_offload={low_vram}")
     model = _load_krea(weights, low_vram)
     _loaded = (*key, model)
     return model
 
 
 def _generate(model, prompt, anchors, blocks, seed, tick):
-    from specar.model_krea import SpecARSession
+    from stridear.model_krea import StrideARSession
     if getattr(model, "embeds", (None,))[0] != prompt:
         start = time.perf_counter()
         model.t5_swap.activate()
         embeds = model.encode_prompts([prompt])[prompt]
         model.t5_swap.evict()
         model.embeds = (prompt, embeds)
-        logging.info(f"SpecAR prompt encoded in {time.perf_counter() - start:.3f} s")
+        logging.info(f"StrideAR prompt encoded in {time.perf_counter() - start:.3f} s")
     frames = []
 
-    def on_frames(pixels, event):  # same conversion as specar.cli.run and write_mp4
+    def on_frames(pixels, event):  # same conversion as stridear.cli.run and write_mp4
         event.synchronize()
         frames.append(pixels.cpu().add_(1.0).mul_(0.5).clamp_(0.0, 1.0))
 
-    session = SpecARSession(model, prompt, seed, blocks, anchors, prompt_embeds=model.embeds[1], frame_callback=on_frames)
+    session = StrideARSession(model, prompt, seed, blocks, anchors, prompt_embeds=model.embeds[1], frame_callback=on_frames)
     for _ in range(blocks):
         session.generate_block()
         tick()
     return (torch.cat(frames, dim=1)[0].permute(0, 2, 3, 1) * 255).to(torch.uint8), session.all_latents
 
 
-WEIGHTS_ROOT = os.path.join(folder_paths.models_dir, "specar")
-folder_paths.add_model_folder_path("specar", WEIGHTS_ROOT, is_default=True)
+WEIGHTS_ROOT = os.path.join(folder_paths.models_dir, "stridear")
+folder_paths.add_model_folder_path("stridear", WEIGHTS_ROOT, is_default=True)
+# Weights downloaded under the old name (models/specar, or a `specar` entry in extra_model_paths.yaml) are still found.
+folder_paths.add_model_folder_path("stridear", os.path.join(folder_paths.models_dir, "specar"))
+for _old in folder_paths.get_folder_paths("specar") if "specar" in folder_paths.folder_names_and_paths else []:
+    folder_paths.add_model_folder_path("stridear", _old)
 
 
 def _plain_dir(entry):
-    # Symlinks and Windows junctions are skipped: they could lead outside models/specar, even to a network share.
+    # Symlinks and Windows junctions are skipped: they could lead outside models/stridear, even to a network share.
     if entry.is_symlink() or not entry.is_dir(follow_symlinks=False):
         return False
     return not getattr(entry.stat(follow_symlinks=False), "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
 
 
 def _weights_dirs():
-    """Weights folders by name, from every models/specar path (including extra_model_paths.yaml); the first path wins."""
+    """Weights folders by name, from every models/stridear path (including extra_model_paths.yaml); the first path wins."""
     dirs = {}
-    for root in folder_paths.get_folder_paths("specar"):
+    for root in folder_paths.get_folder_paths("stridear"):
         if os.path.isdir(root):
             with os.scandir(root) as entries:
                 for entry in entries:
@@ -221,14 +225,14 @@ def _weights_path(name):
     path = _weights_dirs().get(name)
     if path is None:
         if name != "krea":
-            raise ValueError(f"Unknown SpecAR weights {name!r}; pick a folder under models/specar")
+            raise ValueError(f"Unknown StrideAR weights {name!r}; pick a folder under models/stridear")
         path = os.path.join(WEIGHTS_ROOT, "krea")
-        raise FileNotFoundError(f"No weights in {path}. Run: specar download --backbone krea --weights {path}")
+        raise FileNotFoundError(f"No weights in {path}. Run: stridear download --backbone krea --weights {path}")
     return path
 
 
-class SpecARGenerate:
-    CATEGORY = "SpecAR"
+class StrideARGenerate:
+    CATEGORY = "StrideAR"
     FUNCTION = "generate"
     RETURN_TYPES = ("IMAGE", "FLOAT")
     RETURN_NAMES = ("images", "fps")
@@ -241,16 +245,16 @@ class SpecARGenerate:
             "k": ("INT", {"default": 7, "min": 1, "max": 999, "display_name": "k (quality)", "tooltip": "How much of the video the large model generates. Higher is slower; 2 is the fastest setting."}),
             "seconds": ("FLOAT", {"default": 26.6, "min": 0.5, "max": 600.0, "step": 0.1, "tooltip": "Video length, rounded to the nearest 0.75 s. 26.6 is the tested length."}),
             "seed": ("INT", {"default": 42, "min": 0, "max": 0xffffffffffffffff}),
-            "weights": (_weights_choices(), {"default": "krea", "tooltip": "A folder under models/specar."}),
+            "weights": (_weights_choices(), {"default": "krea", "tooltip": "A folder under models/stridear."}),
             "keep_loaded": ("BOOLEAN", {"default": True, "tooltip": "Keep the models loaded for the next run."}),
             "low_vram_offload": ("BOOLEAN", {"default": small_gpu, "tooltip": "Keep only the active model on the GPU."}),
         }}
 
     def generate(self, prompt, k, seconds, seed, weights, keep_loaded, low_vram_offload):
-        from specar import uniform_k
-        from specar.cli import blocks_for_seconds
+        from stridear import uniform_k
+        from stridear.cli import blocks_for_seconds
         if not prompt.strip():
-            raise ValueError("SpecAR needs a prompt")
+            raise ValueError("StrideAR needs a prompt")
         blocks = blocks_for_seconds("krea", seconds)
         k = min(k, blocks)  # a short video has fewer blocks than k
         anchors = uniform_k(k, blocks)
@@ -264,7 +268,7 @@ class SpecARGenerate:
             bar.update(1)
             mm.throw_exception_if_processing_interrupted()
 
-        # ComfyUI runs nodes under inference_mode. The specar CLI loads and sets up with gradients off instead, and
+        # ComfyUI runs nodes under inference_mode. The stridear CLI loads and sets up with gradients off instead, and
         # tensors made under inference_mode cannot be changed in place later, so match the CLI here.
         with torch.inference_mode(False), torch.no_grad():
             model = _model(weights, low_vram_offload)
@@ -273,7 +277,7 @@ class SpecARGenerate:
             frames, latents = _generate(model, prompt, anchors, blocks, seed, tick)
             elapsed = time.perf_counter() - start
         peak = torch.cuda.max_memory_allocated() / 2**30
-        logging.info(f"SpecAR: {len(frames)} frames, k={k}, seed={seed}, generated in {elapsed:.1f} s, "
+        logging.info(f"StrideAR: {len(frames)} frames, k={k}, seed={seed}, generated in {elapsed:.1f} s, "
               f"peak GPU memory {peak:.1f} GiB, loads so far {_load_count}")
         del model, latents
         if keep_loaded:
@@ -283,5 +287,10 @@ class SpecARGenerate:
         return (frames.float() / 255.0, FPS)
 
 
-NODE_CLASS_MAPPINGS = {"SpecARGenerate": SpecARGenerate}
-NODE_DISPLAY_NAME_MAPPINGS = {"SpecARGenerate": "SpecAR Generate"}
+class SpecARGenerate(StrideARGenerate):
+    """Old node id, kept so saved workflows still load; hidden from the node menu."""
+    DEPRECATED = True
+
+
+NODE_CLASS_MAPPINGS = {"StrideARGenerate": StrideARGenerate, "SpecARGenerate": SpecARGenerate}
+NODE_DISPLAY_NAME_MAPPINGS = {"StrideARGenerate": "StrideAR Generate", "SpecARGenerate": "StrideAR Generate (old SpecAR id)"}

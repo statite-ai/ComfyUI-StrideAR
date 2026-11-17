@@ -1,28 +1,28 @@
-# ComfyUI-SpecAR
+# ComfyUI-StrideAR
 
-Runs [StrideAR](https://github.com/statite-ai/SpecAR) text-to-video on Krea Realtime 14B in ComfyUI. It adds one node,
-**SpecAR Generate**, and calls the installed `specar` package.
+Runs [StrideAR](https://github.com/statite-ai/StrideAR) text-to-video on Krea Realtime 14B in ComfyUI. It adds one node,
+**StrideAR Generate**, and calls the installed `stridear` package.
 
-Project page: [statite.ai/stridear](https://statite.ai/stridear/) · Earlier preprint: [PDF](https://statite.ai/specar/specar.pdf) · Code: [statite-ai/SpecAR](https://github.com/statite-ai/SpecAR)
+Project page: [statite.ai/stridear](https://statite.ai/stridear/) · Paper: [PDF](https://statite.ai/stridear/stridear.pdf) · Earlier preprint: [PDF](https://statite.ai/stridear/specar.pdf) · Code: [statite-ai/StrideAR](https://github.com/statite-ai/StrideAR)
 
 ## Install
 
 ```bash
 git clone https://github.com/comfyanonymous/ComfyUI && cd ComfyUI
 python3.11 -m venv .venv-krea && source .venv-krea/bin/activate
-pip install -r requirements.txt "specar[krea] @ git+https://github.com/statite-ai/SpecAR"
-git clone https://github.com/statite-ai/ComfyUI-SpecAR custom_nodes/ComfyUI-SpecAR
-specar download --backbone krea --weights models/specar/krea
+pip install -r requirements.txt "stridear[krea] @ git+https://github.com/statite-ai/StrideAR"
+git clone https://github.com/statite-ai/ComfyUI-StrideAR custom_nodes/ComfyUI-StrideAR
+stridear download --backbone krea --weights models/stridear/krea
 python main.py
 ```
 
-`specar` pins exact library versions, including torch, so use a separate environment. The download is about 50 GB.
+`stridear` pins exact library versions, including torch, so use a separate environment. The download is about 50 GB.
 
 ## Use
 
 1. Open http://127.0.0.1:8188. If ComfyUI runs on a remote GPU machine, first run `ssh -L 8188:127.0.0.1:8188 user@your-gpu-machine` on your own computer.
-2. Go to **Templates**, find **ComfyUI-SpecAR** and open **SpecAR**. You can also drag `example_workflows/SpecAR.json` onto the page.
-3. Type your prompt in **SpecAR Generate**.
+2. Go to **Templates**, find **ComfyUI-StrideAR** and open **StrideAR**. You can also drag `example_workflows/StrideAR.json` onto the page.
+3. Type your prompt in **StrideAR Generate**.
 
 ![The StrideAR workflow in ComfyUI](assets/comfyui-workflow.png)
 
@@ -39,7 +39,7 @@ python main.py
 | `k (quality)` | How much of the video the large target model generates; the small drafter generates the rest. Higher is slower, and 2 is the fastest setting |
 | `seconds` | Video length, rounded to the nearest 0.75 s. 26.6 s (426 frames) is the tested length |
 | `seed` | Random seed. Set it to fixed to reproduce a video |
-| `weights` | A folder under `models/specar` (default `krea`). Symlinked folders are not listed; to keep weights on another disk, add a `specar` path in `extra_model_paths.yaml`. Refresh the page to see a new folder |
+| `weights` | A folder under `models/stridear` (default `krea`). Symlinked folders are not listed; to keep weights on another disk, add a `stridear` path in `extra_model_paths.yaml`. Refresh the page to see a new folder |
 | `keep_loaded` | Keep the models loaded for the next run. Changing the prompt then takes under a second |
 | `low_vram_offload` | Keep only the active model on the GPU. On by default on GPUs under 75 GiB |
 
@@ -63,9 +63,9 @@ the reference hashes apply only to FlashAttention 3 on Hopper GPUs.
 
 ## Reproducibility
 
-With FlashAttention 3 on an H100, the latents and 8-bit frames from this node matched `specar generate` bit for bit, and
-the latents matched the `specar-benchmark` reference hashes, with offload on or off. Save Video uses its own encoder, so
-the mp4 file differs from the one `specar generate` writes, and encoding adds about 30 s at 426 frames.
+With FlashAttention 3 on an H100, the latents and 8-bit frames from this node matched `stridear generate` bit for bit, and
+the latents matched the `stridear-benchmark` reference hashes, with offload on or off. Save Video uses its own encoder, so
+the mp4 file differs from the one `stridear generate` writes, and encoding adds about 30 s at 426 frames.
 
 ## Citation
 
@@ -81,6 +81,6 @@ the mp4 file differs from the one `specar generate` writes, and encoding adds ab
 
 ## License
 
-This node is Apache-2.0. It imports `specar` and contains none of its code. StrideAR's Krea backend is CC BY-NC-SA 4.0,
+This node is Apache-2.0. It imports `stridear` and contains none of its code. StrideAR's Krea backend is CC BY-NC-SA 4.0,
 which allows non-commercial use only, and model weights carry their own licenses. See the
-[StrideAR license notes](https://github.com/statite-ai/SpecAR#license).
+[StrideAR license notes](https://github.com/statite-ai/StrideAR#license).
